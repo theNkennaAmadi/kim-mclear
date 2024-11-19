@@ -158,147 +158,139 @@ export class Global {
 
 
 
-initFooter() {
-    // Canvas
-    const canvas = this.container.querySelector(".webgl1");
+    initFooter() {
+        // Canvas
+        const canvas = this.container.querySelector(".webgl1");
 
-    // Scene
-    const scene = new THREE.Scene();
+        // Scene
+        const scene = new THREE.Scene();
 
-    // Loader setup
-    const dracoLoader = new DRACOLoader();
-    dracoLoader.setDecoderPath("https://cdn.jsdelivr.net/npm/three@0.153.0/examples/jsm/libs/draco/");
+        // Loaders
+        const dracoLoader = new DRACOLoader();
+        dracoLoader.setDecoderPath("https://cdn.jsdelivr.net/npm/three@0.153.0/examples/jsm/libs/draco/");
 
-    const gltfLoader = new GLTFLoader();
-    gltfLoader.setDRACOLoader(dracoLoader);
+        const gltfLoader = new GLTFLoader();
+        gltfLoader.setDRACOLoader(dracoLoader);
 
-    // Store all doves and mixers
-    const doves = [];
-    const mixers = [];
+        // Store all mixers
+        const mixers = [];
 
-    // Load dove model once
-    gltfLoader.load(
-        "https://cdn.jsdelivr.net/gh/theNkennaAmadi/emil-about@main/dist/models/dove/dove-c.glb",
-        (gltf) => {
-            // Create multiple doves by cloning
-            for (let i = 0; i < 10; i++) {
-                // Clone the dove model
-                const dove = clone(gltf.scene);
-                dove.scale.set(0.4, 0.4, 0.4);
+        // Animate individual dove
+        const animateDove = (dove, index) => {
+            const startDelay = index * 0.5; // Stagger start times
+            const duration = 12 + (Math.random() * 10); // Random duration between 12-22 seconds
 
-                // Set different starting positions for each dove
-                dove.position.set(
-                    -5 + (i * 2), // Spread doves horizontally
-                    0 + (Math.random() * 2.2), // Vary height slightly
-                    -1 + (Math.random() * 2) // Vary depth
-                );
+            gsap.timeline({ repeat: -1, delay: startDelay })
+                .to(dove.position, {
+                    x: 3,
+                    z: 0,
+                    duration: duration / 2,
+                    ease: "none"
+                })
+                .to(dove.rotation, {
+                    y: -1.25,
+                    duration: 2
+                }, "-=2") // Start rotation 2 seconds before the position ends
+                .to(dove.position, {
+                    x: -5,
+                    z: -1,
+                    duration: duration / 2,
+                    ease: "none"
+                })
+                .to(dove.rotation, {
+                    y: 1.25,
+                    duration: 2
+                }, "-=2"); // Start rotation 2 seconds before the position ends
+        };
 
-                dove.rotation.y = 1.25;
-                scene.add(dove);
+        // Load dove model once
+        gltfLoader.load(
+            "https://cdn.jsdelivr.net/gh/theNkennaAmadi/emil-about@main/dist/models/dove/dove-c.glb",
+            (gltf) => {
+                const originalDove = gltf.scene;
+                const animationClip = gltf.animations[0];
 
-                // Setup animation mixer
-                const mixer = new THREE.AnimationMixer(dove);
-                const action = mixer.clipAction(gltf.animations[0]);
-                action.setDuration(1.25);
-                action.play();
+                // Create multiple doves by cloning
+                for (let i = 0; i < 10; i++) {
+                    // Clone the dove model
+                    const dove = clone(originalDove);
+                    dove.scale.set(0.4, 0.4, 0.4);
 
-                // Store references
-                doves.push(dove);
-                mixers.push(mixer);
+                    // Set different starting positions for each dove
+                    dove.position.set(
+                        -5 + (i * 2), // Spread doves horizontally
+                        Math.random() * 2.2, // Vary height slightly
+                        -1 + (Math.random() * 2) // Vary depth
+                    );
 
-                // Create unique animation for this dove
-                animateDove(dove, i);
+                    dove.rotation.y = 1.25;
+                    scene.add(dove);
+
+                    // Setup animation mixer
+                    const mixer = new THREE.AnimationMixer(dove);
+                    const action = mixer.clipAction(animationClip);
+                    action.setDuration(1.25).play();
+
+                    mixers.push(mixer);
+
+                    // Create unique animation for this dove
+                    animateDove(dove, i);
+                }
             }
-        }
-    );
+        );
 
-    // Animate individual dove (unchanged)
-    const animateDove = (dove, index) => {
-        const startDelay = index * 0.5; // Stagger start times
-        const duration = 12 + (Math.random() * 10); // Random duration between 12-22 seconds
+        // Lights
+        scene.add(new THREE.AmbientLight("white", 1));
 
-        gsap.timeline({
-            repeat: -1,
-            delay: startDelay
-        })
-            .to(dove.position, {
-                x: 3,
-                z: 0,
-                duration: duration / 2,
-                ease: "none",
-                onComplete: () => {
-                    gsap.to(dove.rotation, {
-                        y: -1.25,
-                        duration: 2
-                    });
-                }
-            })
-            .to(dove.position, {
-                x: -5,
-                z: -1,
-                duration: duration / 2,
-                ease: "none",
-                onComplete: () => {
-                    gsap.to(dove.rotation, {
-                        y: 1.25,
-                        duration: 2
-                    });
-                }
-            });
-    };
+        // Sizes
+        const sizes = {
+            width: window.innerWidth,
+            height: window.innerHeight,
+        };
 
-    // Lights (unchanged)
-    const ambientLight = new THREE.AmbientLight("white", 1);
-    scene.add(ambientLight);
+        // Camera
+        const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100);
+        camera.position.set(0, 0.55, 2);
+        scene.add(camera);
 
-    // Sizes (unchanged)
-    const sizes = {
-        width: window.innerWidth,
-        height: window.innerHeight,
-    };
-
-    window.addEventListener("resize", () => {
-        sizes.width = window.innerWidth;
-        sizes.height = window.innerHeight;
-        camera.aspect = sizes.width / sizes.height;
-        camera.updateProjectionMatrix();
+        // Renderer
+        const renderer = new THREE.WebGLRenderer({
+            canvas: canvas,
+            alpha: true,
+            antialias: true,
+            powerPreference: "high-performance",
+        });
+        renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
         renderer.setSize(sizes.width, sizes.height);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    });
 
-    // Camera (unchanged)
-    const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100);
-    camera.position.set(0, 0.55, 2);
-    scene.add(camera);
+        // Resize handler
+        window.addEventListener("resize", () => {
+            sizes.width = window.innerWidth;
+            sizes.height = window.innerHeight;
 
-    // Renderer (unchanged)
-    const renderer = new THREE.WebGLRenderer({
-        canvas: canvas,
-        alpha: true,
-        antialias: true,
-        powerPreference: "high-performance",
-    });
-    renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
-    renderer.setSize(sizes.width, sizes.height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            camera.aspect = sizes.width / sizes.height;
+            camera.updateProjectionMatrix();
 
-    // Animation loop (unchanged)
-    const clock = new THREE.Clock();
-    let previousTime = 0;
+            renderer.setSize(sizes.width, sizes.height);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        });
 
-    const tick = () => {
-        const elapsedTime = clock.getElapsedTime();
-        const deltaTime = elapsedTime - previousTime;
-        previousTime = elapsedTime;
+        // Animation loop
+        const clock = new THREE.Clock();
 
-        // Update all mixers
-        mixers.forEach(mixer => mixer.update(deltaTime));
+        const tick = () => {
+            const deltaTime = clock.getDelta();
 
-        renderer.render(scene, camera);
-        window.requestAnimationFrame(tick);
-    };
+            // Update all mixers
+            mixers.forEach(mixer => mixer.update(deltaTime));
 
-    tick();
-}
+            renderer.render(scene, camera);
+            requestAnimationFrame(tick);
+        };
+
+        tick();
+    }
+
 
 }
