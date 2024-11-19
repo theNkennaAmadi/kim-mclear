@@ -80,8 +80,8 @@ barba.init({
         {
             namespace: "about",
             afterEnter(data) {
-                new Global(data.next.container);
                 new About(data.next.container);
+                new Global(data.next.container);
             },
         },
         {
@@ -115,8 +115,9 @@ barba.init({
         {
             namespace: "books",
             afterEnter(data) {
-                new Global(data.next.container);
                 new Books(data.next.container);
+                new Global(data.next.container);
+
             },
         },
         {
@@ -134,9 +135,8 @@ barba.init({
                 const nextContainer = data.next.container;
                 const currentContainer = data.current.container;
                 let tlTransition = gsap.timeline({defaults: {ease: "expo.out", onComplete: () => {ScrollTrigger.refresh();}}});
-                tlTransition.to(currentContainer.querySelector(".page-transition"), {opacity: 1, duration: 1}, "<")
-                tlTransition.to(currentContainer.querySelector(".page-wrap-content"), {y: '-20vh', duration: 1}, "<")
-                tlTransition.from(nextContainer.querySelector(".page-wrap-content"), {clipPath: 'inset(100% 0% 0% 0%)', zIndex: 10, duration: 1}, "<")
+                tlTransition.to(currentContainer, {opacity: 0, duration: 0.5}, "<")
+                tlTransition.from(nextContainer, {opacity:1, duration: 0.5}, "<")
                 return tlTransition;
             }
         }

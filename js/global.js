@@ -4,7 +4,7 @@ import ScrollTrigger from 'gsap/ScrollTrigger';
 import * as THREE from "three";
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
 import {DRACOLoader} from "three/examples/jsm/loaders/DRACOLoader.js";
-
+import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -30,7 +30,7 @@ export class Global {
 
     splitText() {
         // Select all elements that need to be split
-        let elementsToSplit = Array.from(this.container.querySelectorAll('h1:not([no-split]), h2:not([no-split]), h3:not([no-split]), p:not([no-split]), a:not([no-split]), label:not([no-split])'));
+        let elementsToSplit = Array.from(this.container.querySelectorAll('h1:not([no-split]), h2:not([no-split]), h3:not([no-split]), p:not([no-split]), a:not([no-split]), label:not([no-split]) span:not([no-split]) blockquote:not([no-split])'));
 
         // Filter out elements that are descendants of other elements in the list
         this.elementsToSplit = elementsToSplit.filter(element => {
@@ -79,6 +79,7 @@ export class Global {
                         trigger: element,
                         start: "top 92%",
                         end: "bottom bottom",
+                        invalidateOnRefresh: true,
                     }
                 });
 
@@ -97,12 +98,12 @@ export class Global {
                     tl.to(chars, {
                         yPercent: 0,
                         opacity: 1,
+                        delay: 1,
                         //scale:1,
                         //ease: 'expo.out',
                         stagger: {
-                            each: 0.1,
+                            each: 0.05,
                             from: 'center',
-                            ease: 'power1.in',
                         }
                     })
                 } else {
@@ -132,6 +133,21 @@ export class Global {
             this.menuOpen ? tl.reverse() : tl.play();
             this.menuOpen = !this.menuOpen;
         })
+
+        this.container.querySelectorAll('.text-link').forEach(link => {
+            const tl = gsap.timeline({paused: true});
+            const words = [...link.querySelectorAll('.word')];
+            tl.to(words.at(-1), {x: '30%', duration: 0.5})
+            tl.to(words.at(-1).querySelectorAll('.char'), {y: '-1.5ch', x: '1.5ch', duration: 0.5}, "<0.1")
+
+
+            link.addEventListener('mouseenter', () => {
+                tl.play();
+            });
+            link.addEventListener('mouseleave', () => {
+                tl.reverse();
+            });
+        });
     }
 
 
@@ -140,149 +156,149 @@ export class Global {
         this.footer.querySelector('.footer-year').textContent = `©${currentYear}`;
     }
 
-    initFooter() {
-        // Canvas
-        const canvas = this.container.querySelector(".webgl1");
 
-        // Scene
-        const scene = new THREE.Scene();
 
-        // Loader setup
-        const dracoLoader = new DRACOLoader();
-        dracoLoader.setDecoderPath("https://cdn.jsdelivr.net/npm/three@0.153.0/examples/jsm/libs/draco/");
+initFooter() {
+    // Canvas
+    const canvas = this.container.querySelector(".webgl1");
 
-        const gltfLoader = new GLTFLoader();
-        gltfLoader.setDRACOLoader(dracoLoader);
+    // Scene
+    const scene = new THREE.Scene();
 
-        // Store all doves and mixers
-        const doves = [];
-        const mixers = [];
+    // Loader setup
+    const dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath("https://cdn.jsdelivr.net/npm/three@0.153.0/examples/jsm/libs/draco/");
 
-        // Load dove model multiple times
-        const createDove = (index) => {
-            gltfLoader.load(
-                "https://cdn.jsdelivr.net/gh/theNkennaAmadi/emil-about@main/dist/models/dove/dove-c.glb",
-                (gltf) => {
-                    const dove = gltf.scene;
-                    dove.scale.set(0.4, 0.4, 0.4);
+    const gltfLoader = new GLTFLoader();
+    gltfLoader.setDRACOLoader(dracoLoader);
 
-                    // Set different starting positions for each dove
-                    dove.position.set(
-                        -5 + (index * 2), // Spread doves horizontally
-                        0 + (Math.random() * 2.2), // Vary height slightly
-                        -1 + (Math.random() * 2) // Vary depth
-                    );
+    // Store all doves and mixers
+    const doves = [];
+    const mixers = [];
 
-                    dove.rotation.y = 1.25;
-                    scene.add(dove);
+    // Load dove model once
+    gltfLoader.load(
+        "https://cdn.jsdelivr.net/gh/theNkennaAmadi/emil-about@main/dist/models/dove/dove-c.glb",
+        (gltf) => {
+            // Create multiple doves by cloning
+            for (let i = 0; i < 10; i++) {
+                // Clone the dove model
+                const dove = clone(gltf.scene);
+                dove.scale.set(0.4, 0.4, 0.4);
 
-                    // Setup animation mixer
-                    const mixer = new THREE.AnimationMixer(dove);
-                    const action = mixer.clipAction(gltf.animations[0]);
-                    action.setDuration(1.25);
-                    action.play();
+                // Set different starting positions for each dove
+                dove.position.set(
+                    -5 + (i * 2), // Spread doves horizontally
+                    0 + (Math.random() * 2.2), // Vary height slightly
+                    -1 + (Math.random() * 2) // Vary depth
+                );
 
-                    // Store references
-                    doves.push(dove);
-                    mixers.push(mixer);
+                dove.rotation.y = 1.25;
+                scene.add(dove);
 
-                    // Create unique animation for this dove
-                    animateDove(dove, index);
-                }
-            );
-        };
+                // Setup animation mixer
+                const mixer = new THREE.AnimationMixer(dove);
+                const action = mixer.clipAction(gltf.animations[0]);
+                action.setDuration(1.25);
+                action.play();
 
-        // Animate individual dove
-        const animateDove = (dove, index) => {
-            const startDelay = index * 0.5; // Stagger start times
-            const duration = 12 + (Math.random() * 10); // Random duration between 7-17 seconds
+                // Store references
+                doves.push(dove);
+                mixers.push(mixer);
 
-            gsap.timeline({
-                repeat: -1,
-                delay: startDelay
-            })
-                .to(dove.position, {
-                    x: 3,
-                    z: 0,
-                    duration: duration / 2,
-                    ease: "none",
-                    onComplete: () => {
-                        gsap.to(dove.rotation, {
-                            y: -1.25,
-                            duration: 2
-                        });
-                    }
-                })
-                .to(dove.position, {
-                    x: -5,
-                    z: -1,
-                    duration: duration / 2,
-                    ease: "none",
-                    onComplete: () => {
-                        gsap.to(dove.rotation, {
-                            y: 1.25,
-                            duration: 2
-                        });
-                    }
-                });
-        };
-
-        // Create multiple doves
-        for (let i = 0; i < 10; i++) {
-            createDove(i);
+                // Create unique animation for this dove
+                animateDove(dove, i);
+            }
         }
+    );
 
-        // Lights
-        const ambientLight = new THREE.AmbientLight("white", 1);
-        scene.add(ambientLight);
+    // Animate individual dove (unchanged)
+    const animateDove = (dove, index) => {
+        const startDelay = index * 0.5; // Stagger start times
+        const duration = 12 + (Math.random() * 10); // Random duration between 12-22 seconds
 
-        // Sizes
-        const sizes = {
-            width: window.innerWidth,
-            height: window.innerHeight,
-        };
+        gsap.timeline({
+            repeat: -1,
+            delay: startDelay
+        })
+            .to(dove.position, {
+                x: 3,
+                z: 0,
+                duration: duration / 2,
+                ease: "none",
+                onComplete: () => {
+                    gsap.to(dove.rotation, {
+                        y: -1.25,
+                        duration: 2
+                    });
+                }
+            })
+            .to(dove.position, {
+                x: -5,
+                z: -1,
+                duration: duration / 2,
+                ease: "none",
+                onComplete: () => {
+                    gsap.to(dove.rotation, {
+                        y: 1.25,
+                        duration: 2
+                    });
+                }
+            });
+    };
 
-        window.addEventListener("resize", () => {
-            sizes.width = window.innerWidth;
-            sizes.height = window.innerHeight;
-            camera.aspect = sizes.width / sizes.height;
-            camera.updateProjectionMatrix();
-            renderer.setSize(sizes.width, sizes.height);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        });
+    // Lights (unchanged)
+    const ambientLight = new THREE.AmbientLight("white", 1);
+    scene.add(ambientLight);
 
-        // Camera
-        const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100);
-        camera.position.set(0, 0.55, 2); // Moved back to see all doves
-        scene.add(camera);
+    // Sizes (unchanged)
+    const sizes = {
+        width: window.innerWidth,
+        height: window.innerHeight,
+    };
 
-        // Renderer
-        const renderer = new THREE.WebGLRenderer({
-            canvas: canvas,
-            alpha: true,
-            antialias: true,
-            powerPreference: "high-performance",
-        });
-        renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
+    window.addEventListener("resize", () => {
+        sizes.width = window.innerWidth;
+        sizes.height = window.innerHeight;
+        camera.aspect = sizes.width / sizes.height;
+        camera.updateProjectionMatrix();
         renderer.setSize(sizes.width, sizes.height);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    });
 
-        // Animation loop
-        const clock = new THREE.Clock();
-        let previousTime = 0;
+    // Camera (unchanged)
+    const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100);
+    camera.position.set(0, 0.55, 2);
+    scene.add(camera);
 
-        const tick = () => {
-            const elapsedTime = clock.getElapsedTime();
-            const deltaTime = elapsedTime - previousTime;
-            previousTime = elapsedTime;
+    // Renderer (unchanged)
+    const renderer = new THREE.WebGLRenderer({
+        canvas: canvas,
+        alpha: true,
+        antialias: true,
+        powerPreference: "high-performance",
+    });
+    renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
+    renderer.setSize(sizes.width, sizes.height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-            // Update all mixers
-            mixers.forEach(mixer => mixer.update(deltaTime));
+    // Animation loop (unchanged)
+    const clock = new THREE.Clock();
+    let previousTime = 0;
 
-            renderer.render(scene, camera);
-            window.requestAnimationFrame(tick);
-        };
+    const tick = () => {
+        const elapsedTime = clock.getElapsedTime();
+        const deltaTime = elapsedTime - previousTime;
+        previousTime = elapsedTime;
 
-        tick();
-    }
+        // Update all mixers
+        mixers.forEach(mixer => mixer.update(deltaTime));
+
+        renderer.render(scene, camera);
+        window.requestAnimationFrame(tick);
+    };
+
+    tick();
+}
+
 }
