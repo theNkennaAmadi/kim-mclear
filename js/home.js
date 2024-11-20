@@ -9,7 +9,7 @@ export class Home{
     }
 
     init(){
-        console.log('Home');
+       // console.log('Home');
         this.featuredLogosReveal();
         this.introImgReveal();
         new DotAnimation(this.container, 'canvasDot');
@@ -31,7 +31,7 @@ export class Home{
             stagger: 0.2,
             scrollTrigger:{
             trigger: this.featuredLogosList,
-            start: 'top 80%',
+            start: 'top 90%',
             }});
     }
 }

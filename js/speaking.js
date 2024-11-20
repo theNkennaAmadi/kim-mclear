@@ -20,11 +20,22 @@ export class Speaking{
 
     init(){
         console.log('Speaking');
+        this.introImgReveal();
         this.initScroll();
         this.initTestimonials();
         this.initChange();
         this.initVideo();
 
+    }
+
+    introImgReveal(){
+        this.introVisual = this.container.querySelector('.media-hero-img');
+        this.introHeader = this.container.querySelector('.media-header').querySelector('.word')
+        this.introSpan = this.container.querySelector('.media-header').querySelector('.s-span')
+        gsap.from(this.introHeader, {xPercent: -150, duration: 3, ease: "expo.out", delay:0.4})
+        gsap.from(this.introSpan, {xPercent: 150, duration: 3, ease: "expo.out", delay:0.4})
+        gsap.from(this.introVisual, {clipPath: 'inset(0% 0% 100% 0%)', ease: "expo.inOut", duration: 4});
+        gsap.from(this.introVisual.querySelector('img'), { scale: 1.3, ease: "expo.out", duration: 4, delay: 0.4});
     }
 
     initTestimonials(){
@@ -40,6 +51,19 @@ export class Speaking{
                 disableOnInteraction: false,
             },
         });
+
+        const swiperC = new Swiper(".swiper-c", {
+            spaceBetween: 0,
+            centeredSlides: true,
+            speed: 3000,
+            autoplay: {
+                delay: 0,
+            },
+            loop: true,
+            slidesPerView: 'auto',
+            allowTouchMove: false,
+            disableOnInteraction: true,
+        })
     }
 
     initChange(){

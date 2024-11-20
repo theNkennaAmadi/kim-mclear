@@ -153,7 +153,7 @@ export class Global {
 
     updateFooterYear() {
         const currentYear = new Date().getFullYear();
-        this.footer.querySelector('.footer-year').textContent = `©${currentYear}`;
+        this.footer.querySelector('.footer-year').textContent = `Copyright ©${currentYear} Kim McLear. All Rights Reserved.`;
     }
 
 
