@@ -1,12 +1,17 @@
 import {gsap} from "gsap";
 import Splitting from "splitting";
-import {ScrollTrigger} from "gsap/ScrollTrigger";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import * as THREE from "three";
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
 import {DRACOLoader} from "three/examples/jsm/loaders/DRACOLoader.js";
 import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
 
+gsap.config({
+    nullTargetWarn: false,
+});
+
 gsap.registerPlugin(ScrollTrigger);
+
 
 export class Global {
     constructor(container) {
@@ -278,4 +283,5 @@ export class Global {
 
 
 }
+new Global(document.querySelector('.page-wrapper'));
 

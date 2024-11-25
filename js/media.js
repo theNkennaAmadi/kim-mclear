@@ -43,11 +43,11 @@ export class Media{
         this.pressItems.forEach(item=>{
             const viewElement = item.querySelector('.view-box');
             item.addEventListener('mouseenter', ()=>{
-               gsap.to(viewElement, {opacity:1,
-                   ease: 'expo.out',
-                   duration: 1.4,
+                gsap.to(viewElement, {opacity:1,
+                    ease: 'expo.out',
+                    duration: 1.4,
 
-               });
+                });
             })
             item.addEventListener('mouseleave', ()=> {
                 gsap.to(viewElement, {opacity:0,
