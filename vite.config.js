@@ -1,18 +1,16 @@
-import { defineConfig } from 'vite'
-
-export default defineConfig({
-    main: './index.js', // The path should be relative to the project root
+export default {
+    main: '/path/to/main.js', // The path should be relative to the project root
     build: {
-        minify: true,
-        manifest: true,
         rollupOptions: {
-            input: './index.js',
-            output: {
-                format: 'umd',
-                entryFileNames: 'index.js',
-                esModule: false,
-                compact: true,
-            },
-        },
-    },
-})
+            input: {
+                main: '/g-home.js', // The path should be relative to the project root
+                about: '/g-about.js',
+                contact: '/g-contact.js',
+                books: '/g-books.js',
+                media: '/g-media.js',
+                speaking: '/g-speaking.js',
+                // Add more files as needed
+            }
+        }
+    }
+}
